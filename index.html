@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/style.css">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="to_do_list" id="todo_list">
+        <div>
+            <input type="date" class="input_date" v-model="date" v-on:keydown.enter="addTodoList">
+        </div>
+
+        <div>
+            <input type="text" class="task_text" v-model="valueInput" v-on:keydown.enter="addTodoList(1,$event)">
+        </div>
+
+        <div class="position_button">
+            <button class="button_add"
+                v-on:click="isEditInProccess? isEdit(currentIndex): addTodoList()">{{isEditInProccess? 'Edit': 'Add'}}</button>
+        </div>
+
+        <hr>
+
+        <div class="text_todo">
+            <ul>
+                <li v-for="(item,index) in todoList">
+                    <span>{{item.updatedAt}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.description}}</span>
+                    <input type="checkbox" checked v-if="item.isDone">
+                    <div class="buttons_wrapper">
+                        <template v-if="!item.isDone">
+                            <div>
+                                <button class="buttons button_done" v-on:click="item.isDone = true">Done</button>
+                            </div>
+                            <div>
+                                <button class="buttons button_delete" v-on:click="removeItem(index)">Delete</button>
+                            </div>
+                            <div>
+                                <button class="buttons button_eddited" v-on:click="eventEdit(index)">Edit</button>
+                            </div>
+                        </template>
+
+
+                    </div>
+                </li>
+            </ul>
+            <img src="/img/3994355_arrow_bottom_down_downward_navigation_icon.png" alt="" class="arrow_down arrows "
+                v-on:click="sort">
+
+        </div>
+    </div>
+
+
+
+
+
+    <script src="https://unpkg.com/vue@next"></script>
+    <script>
+        const TodoLIst = {
+            data() {
+                return {
+                    valueInput: '',
+                    date: '',
+                    isEditInProccess: false,
+                    currentIndex: null,
+                    todoList: [
+                        // completeTill: 1641933118
+                        // createdAt: 1641933118
+                        // description: "description 1"
+                        // id: "1"
+                        // isDone: false
+                        // isInProcess: false
+                        // status: "status 1"
+                        // title: "title 1"
+                        // updatedAt: 1641933118
+                    ]
+                }
+            },
+            methods: {
+                // add items from the inputs to todolist
+                addTodoList() {
+                    this.todoList.push({
+                        updatedAt: this.date,
+                        description: this.valueInput,
+                        isDone: false,
+                    });
+
+                    this.valueInput = '';
+                    this.date = '';
+                },
+                // remove item from the todolist
+                removeItem(index) {
+                    this.todoList.splice(index, 1);
+                },
+
+                // put values of the item from the todolist into the inputs
+                eventEdit(index) {
+                    this.isEditInProccess = true;
+                    this.currentIndex = index;
+                    this.valueInput = this.todoList[index].description;
+                    this.date = this.todoList[index].date;
+                },
+
+                // change the current values into the changed one from the input
+                isEdit(currentIndex) {
+
+                    this.todoList.splice(this.currentIndex, 1, {
+                        date: this.date,
+                        description: this.valueInput,
+                        isDone: false,
+                    });
+                    this.valueInput = '';
+                    this.date = '';
+                    this.isEditInProccess = false;
+                },
+
+                sort() {
+
+                    this.todoList.sort(function (a, b) {
+                        if (a.description > b.description) {
+                            return 1;
+                        }
+                        if (a.description < b.description) {
+                            return -1;
+                        }
+                        // a должно быть равным b
+                        return 0;
+                    });
+                },
+            },
+            async mounted() {
+                let response = await fetch('https://61db46774593510017aff868.mockapi.io/api/v1/item');
+                console.log(response);
+                let json = await response.json();
+                console.log(json);
+                this.todoList = json;
+            }
+        }
+
+        Vue.createApp(TodoLIst).mount('#todo_list')
+    </script>
+
+</body>
+
+</html>

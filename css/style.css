@@ -1,0 +1,74 @@
+.to_do_list {
+    width: 100%;
+    max-width: 350px;
+    padding: 10px;
+}
+
+.input_date {
+    width: 150px;
+    height: 30px;
+    background-color: rgb(218, 252, 240);
+    border: none;
+}
+
+.task_text {
+    width: 350px;
+    height: 70px;
+    margin-top: 40px;
+    background-color: rgb(218, 252, 240);
+    border: none;
+}
+
+.button_add{
+    width: 150px;
+    height: 25px;
+    margin-top: 40px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    background-color: blueviolet;
+    border: none;
+    
+    
+}
+
+.position_button{
+    display: flex;
+    justify-content: center; 
+}
+
+.buttons{
+    width: 100px;
+    height: 25px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    border: none;
+    
+}
+.button_done {
+    background-color: rgb(230, 112, 230);
+}
+.button_delete{
+    background-color: rgb(216, 93, 6);
+}
+.button_eddited{
+    background-color: rgb(9, 185, 156);
+}
+.buttons_wrapper{
+    display: flex;
+    justify-content: space-between;
+}
+
+.text_todo{
+    width: 100%;
+    max-width: 350px;
+    height: 100%;
+    background-color:rgb(218, 252, 240);
+    
+}
+.arrows {
+    height: 30px;
+    position: relative;
+    right: -300px;
+    transition: 0.2s;
+}
