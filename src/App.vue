@@ -1,6 +1,12 @@
 <template>
-  <div><router-link to="/">go home</router-link></div>
-  <div><router-link to="/users">users</router-link></div>
   <router-view></router-view>
 </template>
+<style>
+* {
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+</style>
 

@@ -1,75 +1,60 @@
 <template>
-  <div class="forms_position">
+  <div class="wrapper">
     <div>
-      <div class="form_todoLIst">
-        <hr />
-        <template v-for="(item, index) in todoList" :key="index">
-          <div class="form">
-            <div class="butons_position">
-              <div class="title">{{ item.title }}</div>
-              <div v-if="loaders[item.id]">Loading...</div>
-              <div v-else>
-                <MarkButton
-                  :element="item"
-                  v-on:marked="todoList.splice(index, 1, $event)"
-                ></MarkButton>
-                <router-link :to="'/edit/' + item.id"
-                  ><span class="material-icons icon_edit"> mode_edit </span></router-link
-                >
+      <hr />
+      <template v-for="(item, index) in todoList" :key="index">
+        <div class="form">
+          <div class="nav_items_position">
+            <div>{{ item.title }}</div>
+            <div v-if="loaders[item.id]">Loading...</div>
+            <div v-else>
+              <MarkButton
+                :element="item"
+                v-on:marked="todoList.splice(index, 1, $event)"
+              ></MarkButton>
+              <router-link :to="'/edit/' + item.id"
+                ><span class="material-icons button_edit buttons_color">
+                  mode_edit
+                </span></router-link
+              >
 
-                <DeleteButton
-                  v-if="!item.isDone"
-                  v-on:deleted="todoList.splice(index, 1)"
-                  :element="item"
-                >
-                </DeleteButton>
-                <router-link :to="'/detail/' + item.id">
-                  <span class="material-icons icon_more_vert"> more_vert </span></router-link
-                >
-              </div>
-            </div>
-            <div class="text">{{ item.description }}</div>
-            <div class="pos_icons_inrow">
-              <div class="complete_till_field">
-                Complete till: {{ parseDate(item.completeTill) }}
-              </div>
-              <div class="users_photo">foto</div>
+              <DeleteButton
+                v-if="!item.isDone"
+                v-on:deleted="todoList.splice(index, 1)"
+                :element="item"
+              >
+              </DeleteButton>
+              <router-link :to="'/detail/' + item.id">
+                <span class="material-icons buttons_color"> more_vert </span></router-link
+              >
             </div>
           </div>
-        </template>
-
-        <div>
-          <router-link to="/add">
-            <span class="material-icons icon_add" v-on:click="isVisible = !isVisible"> add </span>
-          </router-link>
+          <div class="form_field">{{ item.description }}</div>
+          <div class="pos_items_inrow">
+            <div class="complete_till_field">Complete till: {{ parseDate(item.completeTill) }}</div>
+            <img :src="getAvatarById(item.userId)" alt="" class="users_photo" />
+          </div>
         </div>
+      </template>
+
+      <div>
+        <router-link to="/add">
+          <span class="material-icons button_add" v-on:click="isVisible = !isVisible"> add </span>
+        </router-link>
       </div>
     </div>
-
-    <AddEditItem
-      v-on:addItem="
-        todoList.push($event);
-        isVisible = false;
-      "
-      v-on:editedItem="
-        todoList.splice(currentIndex, 1, $event);
-        isVisible = false;
-      "
-      :element="todoList[currentIndex]"
-      v-if="isVisible"
-    />
   </div>
 </template>
 
 <script>
 import DeleteButton from '@/components/DeleteButton.vue';
 import MarkButton from '@/components/MarkButton.vue';
-import AddEditItem from '@/components/AddEditItem.vue';
+import { getUsers } from '@/api/users.api';
+import { getItems } from '@/api/items.api';
 export default {
   components: {
     DeleteButton,
     MarkButton,
-    AddEditItem,
   },
   data() {
     return {
@@ -78,6 +63,7 @@ export default {
       isloading: false,
       loaders: {},
       todoList: [],
+      users: [],
     };
   },
   methods: {
@@ -87,10 +73,20 @@ export default {
     },
 
     async getItems() {
-      let response = await fetch('https://61db46774593510017aff868.mockapi.io/api/v1/item');
-      let json = await response.json();
+      let json = await getItems();
       this.todoList = json;
       console.log(json);
+    },
+    async getUsers() {
+      let json = await getUsers();
+      this.users = json;
+    },
+    getAvatarById(userId) {
+      for (let i = 0; i < this.users.length; i++) {
+        if (+this.users[i].id === +userId) {
+          return this.users[i].avatar;
+        }
+      }
     },
     parseDate(seconds) {
       return new Date(seconds).toLocaleDateString();
@@ -98,21 +94,16 @@ export default {
   },
   mounted() {
     this.getItems();
+    this.getUsers();
   },
 };
 </script>
 
 <style scoped>
-.forms_position {
+.wrapper {
   display: flex;
   justify-content: space-around;
-  margin: 20px;
   width: 700px;
-}
-
-.form_todoList {
-  width: 100%;
-  max-width: 350px;
 }
 
 .form {
@@ -120,48 +111,35 @@ export default {
   max-width: 350px;
   background-color: #f2f9ff;
   border-radius: 5px;
-  padding-bottom: 10px;
-  padding-top: 10px;
+  padding: 20px;
   margin-top: 5px;
 }
 
-.text {
+.form_field {
   width: 272px;
+  min-height: 25px;
   background-color: #e1f0fc;
   border-radius: 5px;
-  margin-bottom: 10px;
-  margin-top: 10px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 2px;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
   word-break: break-all;
 }
+.nav_items_position {
+  display: flex;
+  justify-content: space-between;
+}
 
-.icon_edit {
+.button_edit {
   background: #bcf3ed;
   border-radius: 50px;
   cursor: pointer;
 }
-
-.icon_add {
-  background: #a066c5;
-  border-radius: 50px;
-  margin-left: 300px;
-  cursor: pointer;
-  font-size: 50px;
-  color: white;
-}
-.icon_more_vert {
+.buttons_color {
   color: black;
 }
 
-.butons_position {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px 10px;
-}
 .complete_till_field {
-  margin-left: 40px;
   margin-top: 15px;
 }
 .users_photo {
@@ -170,9 +148,16 @@ export default {
   border-radius: 40px;
   background-color: brown;
 }
-.pos_icons_inrow {
+.pos_items_inrow {
   display: flex;
   justify-content: space-between;
-  padding-right: 30px;
+}
+.button_add {
+  background: #a066c5;
+  border-radius: 50px;
+  margin-left: 300px;
+  cursor: pointer;
+  font-size: 50px;
+  color: white;
 }
 </style>

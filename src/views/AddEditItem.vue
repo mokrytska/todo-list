@@ -1,65 +1,57 @@
 <template>
-  <div class="back"></div>
-  <div class="modal_form">
-    <div class="icons_position">
-      <router-link to="/">
-        <div><span class="material-icons icons_color"> home </span></div>
-      </router-link>
-      <router-link to="/users">
-        <div><span class="material-icons icons_color"> group </span></div>
-      </router-link>
-      <router-link to="/">
-        <div><span class="material-icons"> close </span></div>
-      </router-link>
-    </div>
-    <hr style="width: 300px" />
+  <div class="wrapper" v-if="!isVisible">
+    <Hearder></Hearder>
     <div>
       <input
         type="text"
-        class="modal_date"
+        class="inner_field"
         v-model="titleInput"
         v-on:keydown.enter="addTodoLIst()"
       />
     </div>
     <div>
-      <textarea type="text" class="modal_text" v-model="descriptionInput" />
+      <textarea type="text" class="modal_field" v-model="descriptionInput" />
     </div>
     <div>
       <input
         type="date"
-        class="modal_date"
+        class="inner_field"
         v-model="dateInput"
         v-on:keydown.enter="addTodoLIst()"
       />
     </div>
-    <div class="modal_date icons_position">
-      <div>user</div>
-      <div><span class="material-icons"> expand_more </span></div>
-    </div>
-    <div>
-      <button
-        class="button_add"
-        v-on:click="item ? addEditedItem() : addTodoLIst()"
-        :disabled="!isValid || isLoading"
-      >
-        <template v-if="isLoading"
-          ><span class="material-icons sync_icon_anomation"> sync </span>
-        </template>
-        <template v-else>{{ item ? 'Edit' : 'Add' }}</template>
-      </button>
-    </div>
+    <UsersSelect v-model="userInput"></UsersSelect>
+    <button
+      class="button_add"
+      v-on:click="item ? addEditedItem() : addTodoLIst()"
+      :disabled="!isValid || isLoading"
+    >
+      <template v-if="isLoading"
+        ><span class="material-icons sync_icon_anomation"> sync </span>
+      </template>
+      <template v-else>{{ item ? 'Edit' : 'Add' }}</template>
+    </button>
   </div>
 </template>
 
 <script>
+import UsersSelect from '@/components/UsersSelect.vue';
+import Hearder from '@/components/Hearder.vue';
+import { postItem } from '@/api/items.api';
+import { getItemDetails } from '@/api/items.api';
+import { putItem } from '@/api/items.api';
 export default {
-  props: ['element'],
+  components: {
+    UsersSelect,
+    Hearder,
+  },
   data() {
     return {
       descriptionInput: '',
       titleInput: '',
       dateInput: '',
-      item: [],
+      userInput: '',
+      item: null,
       isLoading: false,
     };
   },
@@ -74,56 +66,44 @@ export default {
         isDone: false,
         isInProcess: false,
         completeTill: new Date(this.dateInput).getTime(),
+        userId: this.userInput,
       };
       this.isLoading = true;
-      let response = await fetch(`https://61db46774593510017aff868.mockapi.io/api/v1/item`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json;charset=utf-8',
-        },
-        body: JSON.stringify(item),
-      });
-      let json = await response.json();
+      let json = await postItem(item);
       console.log(json);
       this.$router.push('/');
     },
     async getItemDetails() {
-      // let id = this.$route.params.id;
-      let response = await fetch(
-        `https://61db46774593510017aff868.mockapi.io/api/v1/item/${this.$route.params.id}`
-      );
-      let json = await response.json();
+      let id = this.$route.params.id;
+      let json = await getItemDetails(id);
       this.item = json;
       this.descriptionInput = this.item.description;
       this.titleInput = this.item.title;
-      this.dateInput = new Date(this.item.createdAt).toISOString().substring(0, 10);
-      console.log(this.item);
+      this.dateInput = new Date(this.item.createdAt).getTime();
+      this.userInput = this.item.userId;
     },
     async addEditedItem() {
       let item = {
         description: this.descriptionInput,
         title: this.titleInput,
         completeTill: new Date(this.dateInput).getTime(),
+        userId: this.userInput,
       };
+      let id = this.$route.params.id;
       this.isLoading = true;
-      let response = await fetch(
-        `https://61db46774593510017aff868.mockapi.io/api/v1/item/${this.$route.params.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json;charset=utf-8',
-          },
-          body: JSON.stringify(item),
-        }
-      );
-      let json = await response.json();
+      let json = await putItem(id, item);
       console.log(json);
       this.$router.push('/');
     },
+    setUser(user) {
+      this.userInput = user;
+    },
   },
   mounted() {
-    this.getItemDetails();
-    console.log(this.$route.params.id);
+    if (this.$route.params.id) {
+      this.getItemDetails();
+      console.log(this.$route.params.id);
+    }
   },
   computed: {
     isValid() {
@@ -143,35 +123,44 @@ export default {
 };
 </script>
 <style scoped>
-.modal_form {
+.wrapper {
   width: 100%;
   max-width: 312px;
-  height: 500px;
   background: #f2f9ff;
   border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
   margin: auto;
-  padding-bottom: 35px;
-  /* display: none; */
+  padding: 10px;
 }
-.icons_position {
-  width: 300px;
-  margin: 10px 10px 0px 10px;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 10px 0px 10px;
+
+.inner_field {
+  height: 35px;
+  width: 100%;
+  border-radius: 5px;
+  margin-top: 35px;
+  background-color: rgb(187, 245, 240);
+  text-align: center;
+  border: none;
 }
-.icons_color {
-  color: black;
+
+.modal_field {
+  margin-top: 25px;
+  width: 100%;
+  height: 100px;
+  border-radius: 5px;
+  background-color: #e1f0fc;
+  border: none;
 }
+
+.button_add {
+  background-color: #a066c5;
+  border-radius: 25px;
+  width: 144px;
+  height: 37px;
+  color: white;
+  display: block;
+  margin: 35px auto auto;
+}
+
 .sync_icon_anomation {
   animation-name: rotation;
   animation-duration: 1s;
@@ -185,40 +174,5 @@ export default {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.modal_text {
-  margin-top: 25px;
-  width: 250px;
-  height: 100px;
-  border-radius: 5px;
-  background-color: #e1f0fc;
-  border: none;
-}
-
-.modal_date {
-  width: 250px;
-  height: 35px;
-  border-radius: 5px;
-  margin: 25px;
-  background-color: rgb(187, 245, 240);
-  text-align: center;
-  border: none;
-}
-
-.button_add {
-  background-color: #a066c5;
-  border-radius: 25px;
-  width: 144px;
-  height: 37px;
-  color: white;
-}
-.back {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  background: rgba(0, 0, 0, 0.5);
 }
 </style>
